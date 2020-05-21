@@ -10,7 +10,7 @@ import time
 def conn_mysql():
 	print "connect mysql 173 "
 	global db
-	db = mdb.connect('localhost','root','easytech')
+	db = mdb.connect('localhost','root','passwd')
 	#定义系统变量cursor
 	global cursor
 	cursor = db.cursor()
@@ -23,7 +23,7 @@ def import_table_structure():
 	
 	try:
 		##执行SQL语句
-		os.system("mysql -uroot -peasytech < /storage/bak192/str_2019-09-02.1sql")
+		os.system("mysql -uroot -ppasswd < /storage/bak192/str_2019-09-02.1sql")
 		print "successfully imported table_structure"
 		## 提交修改
 	except:
@@ -62,7 +62,7 @@ def chang_row_format():
 			#执行删除表空间语句
 			try:
 				#连接本地slave数据库
-				db_local = mdb.connect('localhost','root','easytech')
+				db_local = mdb.connect('localhost','root','passwd')
 				cursor_local = db_local.cursor()
 				#print "testing.."
 				cursor_local.execute(sql_dis)
@@ -80,7 +80,7 @@ def chang_row_format():
 def discard_tablespace():
 	#对于存在外键的表，该命令将会出错，可以在日志中定位到出错的表，使用逻辑备份的方式更新表的数据，
 	#实际生产中应该避免使用外键。。。	
-	db = mdb.connect('localhost','root','easytech')
+	db = mdb.connect('localhost','root','passwd')
 	cursor = db.cursor()
 
 	for i in range(0,len(db_name)):
@@ -172,7 +172,7 @@ def cp_myisam_data():
 
 def import_tablespace():
 
-	db = mdb.connect('localhost','root','easytech')
+	db = mdb.connect('localhost','root','passwd')
 	#定义系统变量cursor
 	cursor = db.cursor()
 
