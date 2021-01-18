@@ -8,16 +8,17 @@ import os
 import time
 #连接mysql实例，该实例为目标实例
 def conn_mysql():
-	print "connect mysql 173 "
+	print "connect mysql 目标实例 "
 	global db
 	db = mdb.connect('localhost','root','passwd')
 	#定义系统变量cursor
 	global cursor
 	cursor = db.cursor()
 
-#目标实例中导入表结构
+#目标实例中导入表结构，需要提前使用mysqldump进行表结构备份
 def import_table_structure():
 	print "start importing table structure..."
+	#表结构备份文件路径：/storage/bak192/str_2019-09-02.1sql
 	sql = "source /storage/bak192/str_2019-09-02.1sql"
 	print sql
 	
@@ -122,7 +123,7 @@ def discard_tablespace():
 			except:
 				print "falid discard "+sql_dis 
 
-############################## 对备份脚本应用日志 ##########################################################
+############################## 对备份文件应用日志，获取一致性备份 ##########################################################
 #执行完毕将生成cfg文件和exp文件
 
 def xt_aplog():
@@ -182,7 +183,8 @@ def import_tablespace():
 	for i in range(0,len(db_name)):
 		time.sleep(2)
         #批量生成导入表空间的语句，只对innodb表进行操作
-		sql = "select CONCAT( 'ALTER TABLE ' ,TABLE_NAME ,' IMPORT TABLESPACE;') from information_schema.tables where table_schema="+ "'"+db_name[i]+"'"+' and engine = '+"'"+"innodb"+"'"
+		sql = "select CONCAT( 'ALTER TABLE ' ,TABLE_NAME ,' IMPORT TABLESPACE;') \
+		from information_schema.tables where table_schema="+ "'"+db_name[i]+"'"+' and engine = '+"'"+"innodb"+"'"
 		print sql
 		try:
 			cursor.execute(sql)
@@ -218,7 +220,7 @@ def import_tablespace():
 def main():
 	conn_mysql()
 	import_table_structure()
-#	chang_row_format()
+	chang_row_format()
 	discard_tablespace()
 	xt_aplog()
 	cp_idb_data()
@@ -228,14 +230,13 @@ def main():
 if __name__ == '__main__':
 	global db_name
 #	db_name = ['ods_level','dw_level','hive','rf_level','kettle','transition','trans','HRM','data_monitor']
-	db_name = ['etanalyticsmanager','ETARM','ETBDM','ETCMS','ETCRM','ETCRM_HIS','ETCRS','ETDAD','ETDCS','ETDCS','ETDLM','etmanager','etquestionnaire','ETMMS','ETStat','logdb','percona','sbtest','tmpdb','WEB_DATA','xplanner']
+#	db_name = ['etanalyticsmanager','ETARM','ETBDM','ETCMS','ETCRM','ETCRM_HIS','ETCRS','ETDAD','ETDCS','ETDCS','ETDLM','etmanager','etquestionnaire','ETMMS','ETStat','logdb','percona','sbtest','tmpdb','WEB_DATA','xplanner']
 #	db_name = ['ETCRS','ETDAD','ETDCS','ETDCS','ETDLM','etmanager','etquestionnaire','ETMMS','ETStat','logdb','percona','sbtest','tmpdb','WEB_DATA','xplanner']
+	db_name = ['db1','db2']
 
-#	db_name = ['ETARM']
-#	db_name = ['ETCTS','ETDAD','ETDCS','ETDLM','etmanager','ETMMS','ETStat','WEB_DATA','etutor','ods_level','dw_level','baidudata']
-#	db_name = ['ETCRM','dw_level','baidudata']
+
 	global path_bak
-
+	#xtrackup备份文件目录如下
 	path_bak = "/storage/bak192/2019-09-01_16-00-02/"
 
 	main()
