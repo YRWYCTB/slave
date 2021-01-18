@@ -6,7 +6,7 @@ import MySQLdb as mdb
 #import pymysql 
 import os
 import time
-#连接mysql
+#连接mysql实例，该实例为目标实例
 def conn_mysql():
 	print "connect mysql 173 "
 	global db
@@ -15,7 +15,7 @@ def conn_mysql():
 	global cursor
 	cursor = db.cursor()
 
-#导入表结构
+#目标实例中导入表结构
 def import_table_structure():
 	print "start importing table structure..."
 	sql = "source /storage/bak192/str_2019-09-02.1sql"
@@ -31,16 +31,18 @@ def import_table_structure():
 		print "encounter an error when import table_structure"
 
 
-#新库中的默认行格式为dynamic,但是181中innodb表既有dynamic 格式也有compact格式，如果不对181数据库中行格式进行调整，需要对新建inodb的表行格式进行更改,myisam表不用考虑；
-#连接mysql-181
+#新库中的默认行格式为dynamic,但是数据源中innodb表既有dynamic 格式也有compact格式，
+#如果不对181数据库中行格式进行调整，需要对新建inodb的表行格式进行更改,myisam表不用考虑；
+#连接mysql-数据源实例
 def chang_row_format():
-	print "connect mysql 181 "
-	db = mdb.connect('192.168.1.181','slave','password')
+	print "connect mysql 数据源 "
+	db = mdb.connect('192.168.1.xxx','slave','password')
 	cursor = db.cursor()
 	
 	for i in range(0,len(db_name)):
 		#批量生成删除表空间的语句,增加对表engine的判断，对innodb表可以删除表空间，myisam表直接拷贝即可!!
-		sql = "select CONCAT( 'ALTER TABLE ' ,TABLE_SCHEMA,'.',TABLE_NAME ,' ROW_FORMAT = COMPACT;') from information_schema.tables where table_schema="+ "'"+db_name[i]+"'"+" AND ROW_FORMAT ="+"'"+"COMPACT"+"'"
+		sql = "select CONCAT( 'ALTER TABLE ' ,TABLE_SCHEMA,'.',TABLE_NAME ,' ROW_FORMAT = COMPACT;') \
+		from information_schema.tables where table_schema="+ "'"+db_name[i]+"'"+" AND ROW_FORMAT ="+"'"+"COMPACT"+"'"
 		print sql
 		try:
 			cursor.execute(sql)
@@ -76,7 +78,7 @@ def chang_row_format():
 	#关闭连接
 	db.close
 
-#删除表空间##############################################################################################################
+#目标实例删除表空间##############################################################################################################
 def discard_tablespace():
 	#对于存在外键的表，该命令将会出错，可以在日志中定位到出错的表，使用逻辑备份的方式更新表的数据，
 	#实际生产中应该避免使用外键。。。	
@@ -86,7 +88,8 @@ def discard_tablespace():
 	for i in range(0,len(db_name)):
 		time.sleep(2)
 		#批量生成删除表空间的语句,增加对表engine的判断，对innodb表可以删除表空间，myisam表直接拷贝即可！！并且该命令对myisam表不可用
-		sql = "select CONCAT( 'ALTER TABLE ' ,TABLE_NAME ,' DISCARD TABLESPACE;') from information_schema.tables where table_schema="+ "'"+db_name[i]+"'"+ ' and engine = '+"'"+"innodb"+"'"
+		sql = "select CONCAT( 'ALTER TABLE ' ,TABLE_NAME ,' DISCARD TABLESPACE;') \
+		from information_schema.tables where table_schema="+ "'"+db_name[i]+"'"+ ' and engine = '+"'"+"innodb"+"'"
 		print sql
 		try:
 			cursor.execute(sql)
